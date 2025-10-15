@@ -1,0 +1,54 @@
+{
+  "entities": [
+    {
+      "name": "Student",
+      "type" :"Strong" ,
+      "attributes": [
+        { "name": "StudentID", "isPrimaryKey": true },
+        { "name": "Name", "composite": ["FirstName", "LastName"] },
+        { "name": "Email" },
+        { "name": "Phone", "isMultiValued": true }
+      ]
+    },
+    {
+      "name": "Course",
+      "type" :"Strong" ,
+      "attributes": [
+        { "name": "CourseID", "isPrimaryKey": true },
+        { "name": "Title" },
+        { "name": "Credits" }
+      ]
+    },
+    {
+      "name": "Instructor",
+      "type" :"Strong" ,
+      "attributes": [
+        { "name": "InstructorID", "isPrimaryKey": true },
+        { "name": "Name" },
+        { "name": "Office" }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "entity1": "Student",
+      "entity2": "Course",
+      "name": "Enrolls",
+      "cardinality": "M:N",
+      "attributes": [
+        { "name": "Grade" },
+        { "name": "Semester" }
+      ]
+    },
+    {
+      "entity1": "Instructor",
+      "entity2": "Course",
+      "name": "Teaches",
+      "cardinality": "1:N",
+      "attributes": [
+        { "name": "HOURS" },
+        { "name": "WHEN" }
+      ]
+    }
+  ]
+}
