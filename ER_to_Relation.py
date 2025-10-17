@@ -1,6 +1,5 @@
 import json
 from graphviz import Digraph
-import os
 
 path = input("Enter JSON path: ").strip()
 with open(path, "r") as file:
@@ -41,11 +40,12 @@ for entity in data["entities"]:
             elif ismulti:
                 multi_table_name = f'{table_name}_{attribute_name}'
                 multi_pk = []
-                multi_attr = []
+                multi_fk = []
                 
                 for i in primary_keys :
                    fk_attr_name = f'{table_name}_{i}'
                    multi_pk.append(fk_attr_name)
+                   multi_fk.append(fk_attr_name)
                    foreign_keys.append({
                        'from_table' :  multi_table_name ,
                        'from_attr' :  fk_attr_name ,
@@ -56,49 +56,55 @@ for entity in data["entities"]:
                     multi_pk.extend(composite)
                     
                 else:
-                    multi_pk.append(attribute_name)
+                    multi_pk.append(attribute_name)   
                      
 
-                tables[multi_table_name] = {'pk' : multi_pk,'attributes' :[]}   
+                tables[multi_table_name] = {'pk' : multi_pk,'fk' : multi_fk ,'attributes' :[]}   
 
             else :
                if not is_pk : 
                 attr.append(attribute_name)
 
-        tables[table_name] = {'pk': primary_keys , 'attributes' : attr}                    
-#===============================================================================================
+        tables[table_name] = {'pk': primary_keys ,'fk' : [] ,'attributes' : attr}                    
+#=========================================WEAK ENTITY======================================================
 
     else :
         table_name = entity["name"].strip() 
-        tables[table_name] = {'pk': [], 'attributes': []}
+        tables[table_name] = {'pk': [], 'fk' : [] , 'attributes': []}
+        relation_attr = []
         for rel in data.get("relationships", []):
                 if rel.get("isIdentifying"):
                     entities_in_rel = [e['name'] for e in rel['entities']]
                     if table_name in entities_in_rel:
-                        owner_name = next((name for name in entities_in_rel if name != table_name), None)
+                        identiying_name = next((name for name in entities_in_rel if name != table_name), None)
+                        for attribute in rel.get("attributes", []):  
+                            attribute_name = attribute["name"]
+                            relation_attr.append(attribute_name)
                         break
 
-        owner_pks = tables[owner_name]['pk'] 
-        fk_columns = [f"{owner_name}_{pk}" for pk in owner_pks]
+        identifying_pks = tables[identiying_name]['pk'] 
+        fk_columns = [f"{identiying_name}_{pk}" for pk in identifying_pks]
         partial_keys = []
-        regular_columns = []
+        normal_attr = []
         for attr in entity["attributes"]:
                 if attr.get("isPartialKey"):
                     partial_keys.append(attr["name"])
                 elif "composite" in attr:
-                    regular_columns.extend(attr["composite"])
+                    normal_attr.extend(attr["composite"])
                 else:
-                    regular_columns.append(attr["name"])
+                    normal_attr.append(attr["name"])
         
         tables[table_name]['pk'] = fk_columns + partial_keys
-        tables[table_name]['attributes'] = regular_columns
-        for i, pk in enumerate(owner_pks):
+        tables[table_name]['fk'] = fk_columns
+        tables[table_name]['attributes'] = normal_attr
+        for i in relation_attr :
+          tables[table_name]['attributes'].append(i)
+
+        for i, pk in enumerate(identifying_pks):
                 foreign_keys.append({
                     'from_table': table_name, 'from_attr': fk_columns[i],
-                    'to_table': owner_name, 'to_attr': pk
+                    'to_table': identiying_name, 'to_attr': pk
                 })
-
-
 
 #=======================================HANDLE RELATIONSHIPS===========================================
 for rel in data.get("relationships", []):
@@ -114,10 +120,12 @@ for rel in data.get("relationships", []):
         else :                                  #IN CASE 1:1 I USED  Cross-reference RELATION BECAUSE NO INFO ABOUT PARTICIPATION
             new_relation_tableName =  rel['name'] 
             rel_pk = [] 
+            rel_fk=[]
             first_table_pks = tables[e1]['pk']
             second_table_pks = tables[e2]['pk']
             for pk in first_table_pks :
                 fk_col_name = f"{e1}_{pk}"
+                rel_fk.append(fk_col_name)
                 rel_pk.append(fk_col_name) 
                 foreign_keys.append({
                     'from_table': new_relation_tableName,
@@ -129,6 +137,7 @@ for rel in data.get("relationships", []):
             for pk in second_table_pks :
                 fk_col_name = f"{e2}_{pk}"
                 rel_pk.append(fk_col_name) 
+                rel_fk.append(fk_col_name)
                 foreign_keys.append({
                     'from_table': new_relation_tableName,
                     'from_attr': fk_col_name,
@@ -139,15 +148,16 @@ for rel in data.get("relationships", []):
             for attribute in rel.get("attributes", []): 
                 attribute_name = attribute["name"]
                 rel_attr.append(attribute_name)
-            tables[new_relation_tableName] = {'pk': rel_pk , 'attributes' : rel_attr}    
+            tables[new_relation_tableName] = {'pk': rel_pk ,'fk' : rel_fk, 'attributes' : rel_attr}    
                 
     
         if cardinality == "N:1" or cardinality == "1:N" : 
-            one_table_pks = tables[one_table]['pk']  
+            one_table_pks = tables[one_table]['pk']
+            many_table_fks =[]
             for pk in one_table_pks:
                 fk_col_name = f"{one_table}_{pk}"
                 if fk_col_name not in tables[many_table]['attributes']:
-                    tables[many_table]['attributes'].append(fk_col_name)
+                    tables[many_table]['fk'].append(fk_col_name)
                     foreign_keys.append({
                         'from_table': many_table,
                         'from_attr': fk_col_name,
@@ -161,14 +171,25 @@ for rel in data.get("relationships", []):
 
 
 ##################################CONNECT FOREIGN KEYS################################3        
-fk_cols = {(fk['from_table'], fk['from_attr']) for fk in foreign_keys}
 
 for table_name, table_data in tables.items():
     label = f'<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>{table_name}</b></td></tr>\n'
     for pk in table_data['pk'] :
-        name = f'<u>{pk}</u>'
-        key_marker = "PK"
-        label += f'<TR><TD port="{pk}">{name}</TD><TD>{key_marker}</TD></TR>\n'  
+       if pk in table_data['fk'] : 
+            name = f'<u>{pk}</u>'
+            key_marker = "PK , FK"
+            label += f'<TR><TD port="{pk}">{name}</TD><TD>{key_marker}</TD></TR>\n'
+       else:
+            name = f'<u>{pk}</u>'
+            key_marker = "PK"
+            label += f'<TR><TD port="{pk}">{name}</TD><TD>{key_marker}</TD></TR>\n'
+    for fk in table_data['fk'] :
+        if fk not in  table_data['pk'] :
+            name = f'{fk}'
+            key_marker = "FK"
+            label += f'<TR><TD port="{fk}">{name}</TD><TD>{key_marker}</TD></TR>\n'
+
+              
     for attr in table_data['attributes'] :
         label += f'<TR><TD port = "{attr}">{attr}</TD><TD></TD></TR>\n'      
 
@@ -180,6 +201,7 @@ for fk in foreign_keys:
             f"{fk['from_table']}:{fk['from_attr']}",
             f"{fk['to_table']}:{fk['to_attr']}"
         )
+        
 
 Relation.render(filename="ER-to-Relation/Relational diagram", view=True, cleanup=False)
 

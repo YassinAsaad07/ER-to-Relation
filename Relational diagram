@@ -2,11 +2,12 @@
 digraph {
 	bgcolor=white splines=spline
 	Employee_Phone [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Employee_Phone</b></td></tr>
-<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK</TD></TR>
+<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK , FK</TD></TR>
 <TR><TD port="Phone"><u>Phone</u></TD><TD>PK</TD></TR>
 </table>> shape=plain]
 	Employee [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Employee</b></td></tr>
 <TR><TD port="SSN"><u>SSN</u></TD><TD>PK</TD></TR>
+<TR><TD port="Department_DeptID">Department_DeptID</TD><TD>FK</TD></TR>
 <TR><TD port = "FirstName">FirstName</TD><TD></TD></TR>
 <TR><TD port = "LastName">LastName</TD><TD></TD></TR>
 <TR><TD port = "Street">Street</TD><TD></TD></TR>
@@ -14,10 +15,9 @@ digraph {
 <TR><TD port = "State">State</TD><TD></TD></TR>
 <TR><TD port = "ZIP">ZIP</TD><TD></TD></TR>
 <TR><TD port = "Email">Email</TD><TD></TD></TR>
-<TR><TD port = "Department_DeptID">Department_DeptID</TD><TD></TD></TR>
 </table>> shape=plain]
 	Department_Location [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Department_Location</b></td></tr>
-<TR><TD port="Department_DeptID"><u>Department_DeptID</u></TD><TD>PK</TD></TR>
+<TR><TD port="Department_DeptID"><u>Department_DeptID</u></TD><TD>PK , FK</TD></TR>
 <TR><TD port="Location"><u>Location</u></TD><TD>PK</TD></TR>
 </table>> shape=plain]
 	Department [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Department</b></td></tr>
@@ -30,18 +30,18 @@ digraph {
 <TR><TD port = "Budget">Budget</TD><TD></TD></TR>
 </table>> shape=plain]
 	Dependent [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Dependent</b></td></tr>
-<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK</TD></TR>
+<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK , FK</TD></TR>
 <TR><TD port="DependentName"><u>DependentName</u></TD><TD>PK</TD></TR>
 <TR><TD port = "Age">Age</TD><TD></TD></TR>
 <TR><TD port = "RelationshipToEmployee">RelationshipToEmployee</TD><TD></TD></TR>
 </table>> shape=plain]
 	Manages [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Manages</b></td></tr>
-<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK</TD></TR>
-<TR><TD port="Department_DeptID"><u>Department_DeptID</u></TD><TD>PK</TD></TR>
+<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK , FK</TD></TR>
+<TR><TD port="Department_DeptID"><u>Department_DeptID</u></TD><TD>PK , FK</TD></TR>
 </table>> shape=plain]
 	Assigned_To [label=<<table BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><tr><td COLSPAN="2" BGCOLOR="lightblue"><b>Assigned_To</b></td></tr>
-<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK</TD></TR>
-<TR><TD port="Project_ProjectID"><u>Project_ProjectID</u></TD><TD>PK</TD></TR>
+<TR><TD port="Employee_SSN"><u>Employee_SSN</u></TD><TD>PK , FK</TD></TR>
+<TR><TD port="Project_ProjectID"><u>Project_ProjectID</u></TD><TD>PK , FK</TD></TR>
 <TR><TD port = "HoursPerWeek">HoursPerWeek</TD><TD></TD></TR>
 </table>> shape=plain]
 	Employee_Phone:Employee_SSN -> Employee:SSN
